@@ -58,7 +58,7 @@ impl SingleGate {
 pub struct DoubleGate {}
 
 impl DoubleGate {
-    pub fn CX() -> Gate {
+    pub fn CNOT() -> Gate {
         let zero = Complex::zero();
         let one = Complex::one();
 
@@ -107,7 +107,7 @@ impl DoubleGate {
 pub struct TripleGate {}
 
 impl TripleGate {
-    pub fn CCX() -> Gate {
+    pub fn Toffoli() -> Gate {
         let zero = Complex::zero();
         let one = Complex::one();
 
