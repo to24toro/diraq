@@ -4,11 +4,20 @@ use crate::state::state::State;
 use crate::validate::validate::{
     ctrl_qubit_should_be_different_from_target_qubit, qubit_should_be_less_than_circuit_size,
 };
+use crate::algebra::matrix::{masks, indices};
+use rand;
+use num::complex::Complex;
 
 pub struct QuantumCircuit {
     pub state: State,
     size: usize,
 }
+
+pub enum MeasurementResult {
+    Zero,
+    One,
+}
+
 
 impl QuantumCircuit {
     pub fn new(size: usize) -> QuantumCircuit {
@@ -24,6 +33,32 @@ impl QuantumCircuit {
             assert_eq!(true, qubit <= &&self.size);
         }
         self.state.apply(qubits, gate);
+    }
+
+    pub fn measure(&mut self, qubit: &usize) -> MeasurementResult {
+        let qubit_number = qubit.to_owned();
+        let (upper_mask, lower_mask) = masks(qubit_number);
+        let zero_norm: f64 = (0..(self.state.elements.len() >> 1))
+            .map(|i| self.state.elements[indices(i, qubit, upper_mask, lower_mask).0].norm_sqr())
+            .sum();
+    
+        if zero_norm > rand::random::<f64>() {
+            let zero_prob = zero_norm.sqrt();
+            for i in 0..(self.state.elements.len() >> 1) {
+                let (ith_zero, ith_one) = indices(i, qubit, upper_mask, lower_mask);
+                self.state.elements[ith_zero] /= zero_prob;
+                self.state.elements[ith_one] = Complex::new(0., 0.);
+            }
+            MeasurementResult::Zero
+        } else {
+            let one_prob = (1. - zero_norm).sqrt();
+            for i in 0..(self.state.elements.len() >> 1) {
+                let (ith_zero, ith_one) = indices(i, qubit, upper_mask, lower_mask);
+                self.state.elements[ith_zero] /= one_prob;
+                self.state.elements[ith_one] = Complex::new(0., 0.);
+            }
+            MeasurementResult::One
+        }
     }
 
     pub fn H(&mut self, qubit: usize) {
