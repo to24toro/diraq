@@ -8,11 +8,11 @@ use circuit::circuit::QuantumCircuit;
 use gate::base_gates::{DoubleGate, SingleGate};
 
 fn main() {
-    println!("hi");
     let mut qc = QuantumCircuit::new(3);
-    qc.H(0);
-    // qc.apply(&[&0], &SingleGate::H());
-    qc.apply(&[&0, &1], &DoubleGate::CNOT());
-    qc.apply(&[&0, &2], &DoubleGate::CNOT());
+    qc.X(0);
+    qc.X(1);
+    // qc.X(2);
+    qc.CCSWAP(0, 1, 2);
+
     println!("{}", qc.state);
 }

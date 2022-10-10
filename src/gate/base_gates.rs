@@ -53,6 +53,39 @@ impl SingleGate {
             matrix: array![[one, zero], [zero, one]],
         }
     }
+
+    pub fn RX(theta: f64) -> Gate {
+        let cos = Complex::new((theta / 2.).cos(), 0.);
+        let isin = Complex::new(0., (theta / 2.).sin());
+
+        Gate {
+            size: 1,
+            matrix: array![[cos, -isin], [isin, cos]],
+        }
+    }
+
+    pub fn RY(theta: f64) -> Gate {
+        let cos = Complex::new((theta / 2.).cos(), 0.);
+        let sin = Complex::new((theta / 2.).sin(), 0.);
+
+        Gate {
+            size: 1,
+            matrix: array![[cos, -sin], [sin, cos]],
+        }
+    }
+
+    pub fn RZ(theta: f64) -> Gate {
+        let cos = (theta / 2.).cos();
+        let sin = (theta / 2.).sin();
+
+        Gate {
+            size: 1,
+            matrix: array![
+                [Complex::new(cos, -sin), Complex::zero()],
+                [Complex::zero(), Complex::new(cos, sin)]
+            ],
+        }
+    }
 }
 
 pub struct DoubleGate {}
