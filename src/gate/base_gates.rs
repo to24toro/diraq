@@ -55,8 +55,8 @@ impl SingleGate {
     }
 
     pub fn RX(theta: f64) -> Gate {
-        let cos = Complex::new((theta/2.).cos(),0.);
-        let isin = Complex::new(0., (theta/2.).sin());
+        let cos = Complex::new((theta / 2.).cos(), 0.);
+        let isin = Complex::new(0., (theta / 2.).sin());
 
         Gate {
             size: 1,
@@ -65,8 +65,8 @@ impl SingleGate {
     }
 
     pub fn RY(theta: f64) -> Gate {
-        let cos = Complex::new((theta/2.).cos(),0.);
-        let sin = Complex::new((theta/2.).sin(), 0.);
+        let cos = Complex::new((theta / 2.).cos(), 0.);
+        let sin = Complex::new((theta / 2.).sin(), 0.);
 
         Gate {
             size: 1,
@@ -75,12 +75,15 @@ impl SingleGate {
     }
 
     pub fn RZ(theta: f64) -> Gate {
-        let cos = (theta/2.).cos();
-        let sin = (theta/2.).sin();
+        let cos = (theta / 2.).cos();
+        let sin = (theta / 2.).sin();
 
         Gate {
             size: 1,
-            matrix: array![[Complex::new(cos, -sin), Complex::zero()], [Complex::zero(), Complex::new(cos, sin)]],
+            matrix: array![
+                [Complex::new(cos, -sin), Complex::zero()],
+                [Complex::zero(), Complex::new(cos, sin)]
+            ],
         }
     }
 }

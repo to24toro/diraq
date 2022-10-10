@@ -153,7 +153,7 @@ fn Y_test() {
     let mut qc = QuantumCircuit::new(1);
     qc.X(0);
     qc.Y(0);
-    assert_eq!(Complex::new(0.,-1.), qc.state.elements[0]);
+    assert_eq!(Complex::new(0., -1.), qc.state.elements[0]);
     assert_eq!(Complex::zero(), qc.state.elements[1]);
 }
 
@@ -190,14 +190,14 @@ fn H_test() {
 fn CNOT_test() {
     let mut qc = QuantumCircuit::new(2);
     qc.X(0);
-    qc.CNOT(0,1);
+    qc.CNOT(0, 1);
     assert_eq!(Complex::zero(), qc.state.elements[1]);
     assert_eq!(Complex::one(), qc.state.elements[3]);
 
     let mut qc = QuantumCircuit::new(2);
     qc.X(0);
     qc.X(1);
-    qc.CNOT(0,1);
+    qc.CNOT(0, 1);
     assert_eq!(Complex::one(), qc.state.elements[1]);
     assert_eq!(Complex::zero(), qc.state.elements[3]);
 }
@@ -207,7 +207,7 @@ fn CZ_test() {
     let mut qc = QuantumCircuit::new(2);
     qc.X(0);
     qc.X(1);
-    qc.CZ(0,1);
+    qc.CZ(0, 1);
     assert_eq!(-Complex::one(), qc.state.elements[3]);
 }
 
@@ -215,13 +215,13 @@ fn CZ_test() {
 fn SWAP_test() {
     let mut qc = QuantumCircuit::new(2);
     qc.X(0);
-    qc.SWAP(0,1);
+    qc.SWAP(0, 1);
     assert_eq!(Complex::zero(), qc.state.elements[1]);
     assert_eq!(Complex::one(), qc.state.elements[2]);
 
     let mut qc = QuantumCircuit::new(2);
     qc.X(1);
-    qc.SWAP(0,1);
+    qc.SWAP(0, 1);
     assert_eq!(Complex::one(), qc.state.elements[1]);
     assert_eq!(Complex::zero(), qc.state.elements[2]);
 }
@@ -231,7 +231,7 @@ fn Toffoli_test() {
     let mut qc = QuantumCircuit::new(3);
     qc.X(0);
     qc.X(1);
-    qc.Toffoli(0,1, 2);
+    qc.Toffoli(0, 1, 2);
     assert_eq!(Complex::zero(), qc.state.elements[3]);
     assert_eq!(Complex::one(), qc.state.elements[7]);
 
@@ -239,7 +239,7 @@ fn Toffoli_test() {
     qc.X(0);
     qc.X(1);
     qc.X(2);
-    qc.Toffoli(0,1, 2);
+    qc.Toffoli(0, 1, 2);
     assert_eq!(Complex::one(), qc.state.elements[3]);
     assert_eq!(Complex::zero(), qc.state.elements[7]);
 }
@@ -249,7 +249,7 @@ fn CCSWAP_test() {
     let mut qc = QuantumCircuit::new(3);
     qc.X(0);
     qc.X(1);
-    qc.CCSWAP(0,1, 2);
+    qc.CCSWAP(0, 1, 2);
     assert_eq!(Complex::zero(), qc.state.elements[4]);
     assert_eq!(Complex::one(), qc.state.elements[5]);
 
@@ -257,6 +257,6 @@ fn CCSWAP_test() {
     qc.X(0);
     qc.X(1);
     qc.X(2);
-    qc.CCSWAP(0,1, 2);
+    qc.CCSWAP(0, 1, 2);
     assert_eq!(Complex::one(), qc.state.elements[7]);
 }
