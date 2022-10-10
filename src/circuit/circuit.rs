@@ -7,15 +7,44 @@ use crate::validate::validate::{
 };
 use num::{complex::Complex, One, Zero};
 use rand;
+use std::fmt;
 
 pub struct QuantumCircuit {
     pub state: State,
     size: usize,
 }
 
-pub enum MeasurementResult {
+pub struct MeasurementResult {
+    zero: usize,
+    one: usize,
+    shots: usize,
+    qubit: usize,
+}
+
+enum Basic {
     Zero,
     One,
+}
+
+impl MeasurementResult {
+    fn new(qubit: usize, shots: usize) -> MeasurementResult {
+        MeasurementResult {
+            zero: 0,
+            one: 0,
+            shots,
+            qubit,
+        }
+    }
+}
+
+impl fmt::Display for MeasurementResult {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "measured qubit: {}, '0': {}, '1': {}, 'shots': {}",
+            self.qubit, self.zero, self.one, self.shots
+        )
+    }
 }
 
 impl QuantumCircuit {
@@ -34,30 +63,33 @@ impl QuantumCircuit {
         self.state.apply(qubits, gate);
     }
 
-    pub fn measure(&mut self, qubit: &usize) -> MeasurementResult {
-        let qubit_number = qubit.to_owned();
-        let (upper_mask, lower_mask) = masks(qubit_number);
+    pub fn measure(&mut self, qubit: usize, shots: usize) -> MeasurementResult {
+        let mut result = MeasurementResult::new(qubit, shots);
+        let qubit_ref = qubit.to_owned();
+        let (upper_mask, lower_mask) = masks(qubit_ref);
         let zero_norm: f64 = (0..(self.state.elements.len() >> 1))
-            .map(|i| self.state.elements[indices(i, qubit, upper_mask, lower_mask).0].norm_sqr())
+            .map(|i| self.state.elements[indices(i, &qubit, upper_mask, lower_mask).0].norm_sqr())
             .sum();
-
-        if zero_norm > rand::random::<f64>() {
-            let zero_prob = zero_norm.sqrt();
-            for i in 0..(self.state.elements.len() >> 1) {
-                let (ith_zero, ith_one) = indices(i, qubit, upper_mask, lower_mask);
-                self.state.elements[ith_zero] /= zero_prob;
-                self.state.elements[ith_one] = Complex::new(0., 0.);
+        for _ in 0..shots {
+            if zero_norm > rand::random::<f64>() {
+                let zero_prob = zero_norm.sqrt();
+                for i in 0..(self.state.elements.len() >> 1) {
+                    let (ith_zero, ith_one) = indices(i, &qubit, upper_mask, lower_mask);
+                    self.state.elements[ith_zero] /= zero_prob;
+                    self.state.elements[ith_one] = Complex::new(0., 0.);
+                }
+                result.zero += 1;
+            } else {
+                let one_prob = (1. - zero_norm).sqrt();
+                for i in 0..(self.state.elements.len() >> 1) {
+                    let (ith_zero, ith_one) = indices(i, &qubit, upper_mask, lower_mask);
+                    self.state.elements[ith_zero] /= one_prob;
+                    self.state.elements[ith_one] = Complex::new(0., 0.);
+                }
+                result.one += 1;
             }
-            MeasurementResult::Zero
-        } else {
-            let one_prob = (1. - zero_norm).sqrt();
-            for i in 0..(self.state.elements.len() >> 1) {
-                let (ith_zero, ith_one) = indices(i, qubit, upper_mask, lower_mask);
-                self.state.elements[ith_zero] /= one_prob;
-                self.state.elements[ith_one] = Complex::new(0., 0.);
-            }
-            MeasurementResult::One
         }
+        result
     }
 
     pub fn H(&mut self, qubit: usize) {
