@@ -44,6 +44,16 @@ impl SingleGate {
         }
     }
 
+    pub fn P(theta: f64) -> Gate {
+        let zero = Complex::zero();
+        let one = Complex::one();
+
+        Gate {
+            size: 1,
+            matrix: array![[one, zero], [zero, Complex::new(theta.cos(), -theta.sin())]],
+        }
+    }
+
     pub fn I() -> Gate {
         let zero = Complex::zero();
         let one = Complex::one();
@@ -86,19 +96,6 @@ impl SingleGate {
             ],
         }
     }
-
-    pub fn P(theta: f64) -> Gate {
-        let cos = theta.cos();
-        let sin = theta.sin();
-
-        Gate {
-            size: 1,
-            matrix: array![
-                [Complex::one(), Complex::zero()],
-                [Complex::zero(), Complex::new(cos, sin)]
-            ],
-        }
-    }
 }
 
 pub struct DoubleGate {}
@@ -130,6 +127,21 @@ impl DoubleGate {
                 [zero, one, zero, zero],
                 [zero, zero, one, zero],
                 [zero, zero, zero, -one]
+            ],
+        }
+    }
+
+    pub fn CP(theta: f64) -> Gate {
+        let zero = Complex::zero();
+        let one = Complex::one();
+
+        Gate {
+            size: 2,
+            matrix: array![
+                [one, zero, zero, zero],
+                [zero, one, zero, zero],
+                [zero, zero, one, zero],
+                [zero, zero, zero, Complex::new(theta.cos(), -theta.sin())]
             ],
         }
     }

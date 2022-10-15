@@ -1,12 +1,16 @@
 use crate::algebra::matrix::{indices, masks};
+use crate::circuit;
 use crate::gate::base_gates::{DoubleGate, SingleGate, TripleGate};
 use crate::gate::gate::Gate;
 use crate::state::state::State;
 use crate::validate::validate::{
     ctrl_qubit_should_be_different_from_target_qubit, qubit_should_be_less_than_circuit_size,
 };
+use num::complex::ComplexFloat;
 use num::{complex::Complex, One, Zero};
 use rand;
+use std::f64::consts::PI;
+use std::f64::EPSILON;
 use std::fmt;
 
 pub struct QuantumCircuit {
@@ -112,6 +116,11 @@ impl QuantumCircuit {
         self.apply(&[&qubit], &SingleGate::Z());
     }
 
+    pub fn P(&mut self, qubit: usize, theta: f64) {
+        qubit_should_be_less_than_circuit_size(&qubit, &self.size);
+        self.apply(&[&qubit], &SingleGate::P(theta));
+    }
+
     pub fn I(&mut self, qubit: usize) {
         qubit_should_be_less_than_circuit_size(&qubit, &self.size);
         self.apply(&[&qubit], &SingleGate::I());
@@ -138,6 +147,13 @@ impl QuantumCircuit {
         self.apply(&[&ctrl_qubit, &target_qubit], &DoubleGate::SWAP());
     }
 
+    pub fn CP(&mut self, ctrl_qubit: usize, target_qubit: usize, theta: f64) {
+        qubit_should_be_less_than_circuit_size(&ctrl_qubit, &self.size);
+        qubit_should_be_less_than_circuit_size(&target_qubit, &self.size);
+        ctrl_qubit_should_be_different_from_target_qubit(&ctrl_qubit, &target_qubit);
+        self.apply(&[&ctrl_qubit, &target_qubit], &DoubleGate::CP(theta));
+    }
+
     pub fn Toffoli(&mut self, ctrl_qubit1: usize, ctrl_qubit2: usize, target_qubit: usize) {
         qubit_should_be_less_than_circuit_size(&ctrl_qubit1, &self.size);
         qubit_should_be_less_than_circuit_size(&ctrl_qubit2, &self.size);
@@ -160,6 +176,26 @@ impl QuantumCircuit {
             &[&ctrl_qubit1, &ctrl_qubit2, &target_qubit],
             &TripleGate::CCSWAP(),
         );
+    }
+
+    pub fn QFT(&mut self, from_qubit: usize, to_qubit: usize) {
+        qubit_should_be_less_than_circuit_size(&from_qubit, &self.size);
+        qubit_should_be_less_than_circuit_size(&to_qubit, &self.size);
+        let qubit_len = to_qubit - from_qubit + 1;
+        for q in 0..qubit_len {
+            self.apply(&[&q], &SingleGate::H());
+            let mut phase = PI;
+            for qq in 0..qubit_len - q - 1 {
+                phase /= 2.;
+                self.CP(qq + q + 1, q, phase);
+            }
+        }
+
+        let mut id = 0;
+        while id < qubit_len - id - 1 {
+            self.SWAP(id, qubit_len - id - 1);
+            id += 1;
+        }
     }
 }
 
@@ -204,6 +240,26 @@ fn Z_test() {
 }
 
 #[test]
+fn P_test() {
+    let mut qc = QuantumCircuit::new(1);
+    qc.P(0, PI);
+    assert_eq!(Complex::one(), qc.state.elements[0]);
+    assert_eq!(Complex::zero(), qc.state.elements[1]);
+
+    let mut qc = QuantumCircuit::new(1);
+    qc.X(0);
+    qc.P(0, PI);
+    assert_eq!(Complex::zero(), qc.state.elements[0]);
+    assert_eq!(-1. - qc.state.elements[1].re() < EPSILON, true);
+
+    let mut qc = QuantumCircuit::new(1);
+    qc.X(0);
+    qc.P(0, PI / 2.);
+    assert_eq!(Complex::zero(), qc.state.elements[0]);
+    assert_eq!(-1. - qc.state.elements[1].im() < EPSILON, true);
+}
+
+#[test]
 fn H_test() {
     let mut qc = QuantumCircuit::new(1);
     let sqrt2inv = Complex::new(2.0f64.sqrt().recip(), 0.);
@@ -241,6 +297,20 @@ fn CZ_test() {
     qc.X(1);
     qc.CZ(0, 1);
     assert_eq!(-Complex::one(), qc.state.elements[3]);
+}
+#[test]
+fn CP_test() {
+    let mut qc = QuantumCircuit::new(2);
+    qc.X(0);
+    qc.X(1);
+    qc.CP(0, 1, PI);
+    assert_eq!(-1. - qc.state.elements[3].re() < EPSILON, true);
+
+    let mut qc = QuantumCircuit::new(2);
+    qc.X(0);
+    qc.X(1);
+    qc.CP(0, 1, PI / 2.);
+    assert_eq!(-1. - qc.state.elements[3].im() < EPSILON, true);
 }
 
 #[test]
@@ -291,4 +361,19 @@ fn CCSWAP_test() {
     qc.X(2);
     qc.CCSWAP(0, 1, 2);
     assert_eq!(Complex::one(), qc.state.elements[7]);
+}
+
+#[test]
+fn QFT_test() {
+    let circuit_size: usize = 3;
+    let circuit_size_f64 = (1 << circuit_size) as f64;
+    let mut qc = QuantumCircuit::new(circuit_size);
+    let sqrt_circuit_size_inv = circuit_size_f64.sqrt().recip();
+    qc.QFT(0, circuit_size - 1);
+    for i in 0..1 << circuit_size {
+        assert_eq!(
+            sqrt_circuit_size_inv - qc.state.elements[i].re() < EPSILON,
+            true
+        );
+    }
 }
